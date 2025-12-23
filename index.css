@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.app-drag-region {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    z-index: 50;
+    -webkit-app-region: drag;
+    pointer-events: none;
+    /* Make clicks pass through to potential buttons underneath if needed, though usually titlebar blocks clicks */
+}
+
+/* Allow buttons inside the drag region to be clickable */
+.app-drag-region button {
+    -webkit-app-region: no-drag;
+    pointer-events: auto;
+}

@@ -1,0 +1,7 @@
+# pnpm 配置文件说明
+# 
+# 注意：pnpm 使用 .npmrc 文件进行配置，不是 .pnpmfile
+# 此文件仅作为说明文档
+#
+# 实际的 pnpm 配置在 .npmrc 文件中
+

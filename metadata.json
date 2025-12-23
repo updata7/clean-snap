@@ -1,0 +1,8 @@
+{
+  "name": "CleanSnap Web",
+  "description": "A powerful screen capture and annotation tool inspired by CleanShot X, featuring AI capabilities and beautiful backgrounds.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}

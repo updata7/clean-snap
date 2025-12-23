@@ -1,0 +1,20 @@
+declare const electron: any;
+declare const app: any, BrowserWindow: any, globalShortcut: any, ipcMain: any, electronScreen: any, nativeImage: any, clipboard: any;
+declare const path: any;
+declare const writeFile: any;
+declare let mainWindow: typeof BrowserWindow.prototype | null;
+declare let selectorWindow: typeof BrowserWindow.prototype | null;
+declare let previewWindow: typeof BrowserWindow.prototype | null;
+declare const isDev: boolean;
+declare function createMainWindow(): void;
+declare function createSelectorWindow(): void;
+declare function createPreviewWindow(imagePath: string): void;
+declare function captureFullScreen(): Promise<string>;
+declare function captureWindow(): Promise<string>;
+declare function captureArea(): Promise<string>;
+declare function captureSelection(bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}): Promise<string>;
