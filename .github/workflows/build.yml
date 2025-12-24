@@ -147,15 +147,21 @@ jobs:
           echo "macOS artifacts:"
           ls -la release/macos/ || echo "No macOS files"
 
+      - name: Prepare release files
+        run: |
+          mkdir -p release-final
+          # 只复制安装包和 DMG 文件，排除调试文件
+          find release/windows -type f \( -name "*.exe" -o -name "*.zip" \) -exec cp {} release-final/ \; || true
+          find release/macos -type f \( -name "*.dmg" -o -name "*.zip" \) -exec cp {} release-final/ \; || true
+          echo "Final release files:"
+          ls -la release-final/
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            release/windows/*
-            release/macos/*
+          files: release-final/*
           draft: false
           prerelease: false
           generate_release_notes: true
           tag_name: v${{ steps.version.outputs.version }}
           name: Release v${{ steps.version.outputs.version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
