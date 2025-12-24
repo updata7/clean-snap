@@ -12,6 +12,7 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60  # 设置 60 分钟超时（macOS 构建 DMG 可能需要较长时间）
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
@@ -39,6 +40,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Check pnpm and lockfile
+        shell: bash
         run: |
           echo "pnpm version:"
           pnpm --version
@@ -70,7 +72,10 @@ jobs:
 
       - name: Build Electron app for macOS
         if: matrix.os == 'macos-latest'
+        # 构建 macOS 应用（DMG 和 ZIP）
+        # 注意：构建 DMG 可能需要较长时间，已设置超时为 45 分钟
         run: pnpm run build:electron -- --mac
+        timeout-minutes: 45  # macOS 构建 DMG 可能需要较长时间
         env:
           # 如果需要签名，可以在这里添加证书
           # APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -83,14 +88,14 @@ jobs:
         shell: bash
         run: |
           echo "Release files:"
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            if [ -d "release" ]; then
-              find release -type f -name "*.exe" -o -name "*.zip" || echo "No exe/zip files found"
+          if [ -d "release" ]; then
+            if [ "${{ matrix.os }}" == "windows-latest" ]; then
+              find release -type f \( -name "*.exe" -o -name "*.zip" \) || echo "No exe/zip files found"
             else
-              echo "No release directory found"
+              ls -la release/ || echo "No release directory found"
             fi
           else
-            ls -la release/ || echo "No release directory found"
+            echo "No release directory found"
           fi
 
       - name: Upload Windows artifacts
