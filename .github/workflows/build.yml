@@ -13,6 +13,8 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60  # 设置 60 分钟超时（macOS 构建 DMG 可能需要较长时间）
+    permissions:
+      contents: write  # 需要此权限来创建 Release 和上传文件
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
@@ -62,19 +64,21 @@ jobs:
 
       - name: Build Electron app for Windows
         if: matrix.os == 'windows-latest'
-        run: pnpm run build:electron -- --win --x64
+        run: pnpm run build:electron -- --win --x64 --publish always
         env:
           # 如果需要签名，可以在这里添加证书
           # CSC_LINK: ${{ secrets.CSC_LINK }}
           # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           # 禁用代码签名（CI 环境通常不需要）
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          # electron-builder 会自动使用 GITHUB_TOKEN（由 GitHub Actions 自动提供）
+          # 会自动从 GITHUB_REPOSITORY 检测 owner 和 repo
 
       - name: Build Electron app for macOS
         if: matrix.os == 'macos-latest'
         # 构建 macOS 应用（DMG 和 ZIP）
         # 注意：构建 DMG 可能需要较长时间，已设置超时为 45 分钟
-        run: pnpm run build:electron -- --mac
+        run: pnpm run build:electron -- --mac --publish always
         timeout-minutes: 45  # macOS 构建 DMG 可能需要较长时间
         env:
           # 如果需要签名，可以在这里添加证书
@@ -83,6 +87,8 @@ jobs:
           # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # 禁用代码签名（CI 环境通常不需要）
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          # electron-builder 会自动使用 GITHUB_TOKEN（由 GitHub Actions 自动提供）
+          # 会自动从 GITHUB_REPOSITORY 检测 owner 和 repo
 
       - name: List release files
         shell: bash
@@ -116,44 +122,8 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      contents: write  # 需要此权限来创建 Release 和标签
-      actions: read     # 读取 Actions 信息
-    
-    steps:
-      - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-exe-${{ github.sha }}
-          path: release/windows
-
-      - name: Download macOS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-dmg-${{ github.sha }}
-          path: release/macos
-
-      - name: Read version from package.json
-        id: version
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            release/windows/*
-            release/macos/*
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          tag_name: v${{ steps.version.outputs.version }}-${{ github.run_number }}
-          name: Release v${{ steps.version.outputs.version }}-${{ github.run_number }}
-        # GITHUB_TOKEN 由 GitHub Actions 自动提供，无需显式声明
-        # softprops/action-gh-release 会自动使用 GITHUB_TOKEN
+  # release job 已移除，因为 electron-builder 会自动发布到 GitHub Releases
+  # electron-builder 会在构建完成后自动：
+  # 1. 创建或更新 Release（基于 package.json 中的版本号）
+  # 2. 上传构建产物（.exe, .dmg, .zip 等）
+  # 3. 创建 Git 标签（格式：v{version}）
