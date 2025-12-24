@@ -150,9 +150,20 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release-final
-          # 只复制安装包和 DMG 文件，排除调试文件
-          find release/windows -type f \( -name "*.exe" -o -name "*.zip" \) -exec cp {} release-final/ \; || true
+          # 复制并重命名文件，移除空格
+          for file in release/windows/*.exe; do
+            if [ -f "$file" ]; then
+              # 移除文件名中的空格
+              newname=$(basename "$file" | tr ' ' '-')
+              cp "$file" "release-final/$newname"
+              echo "Copied: $file -> release-final/$newname"
+            fi
+          done
+          
+          # 复制 DMG 和 ZIP 文件
           find release/macos -type f \( -name "*.dmg" -o -name "*.zip" \) -exec cp {} release-final/ \; || true
+          
+          echo ""
           echo "Final release files:"
           ls -la release-final/
 
@@ -165,3 +176,4 @@ jobs:
           generate_release_notes: true
           tag_name: v${{ steps.version.outputs.version }}
           name: Release v${{ steps.version.outputs.version }}
+          fail_on_unmatched_files: false
