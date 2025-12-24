@@ -35,7 +35,7 @@ A powerful, beautiful screen capture and annotation tool inspired by CleanShot X
 ## Installation
 
 ### Prerequisites
-- Node.js 18+ 
+- node 20+ (suggestion 20.19.6)
 - npm or yarn
 
 ### Setup
@@ -174,8 +174,3 @@ MIT License
 ## Acknowledgments
 
 Inspired by [CleanShot X](https://cleanshot.com/) - an amazing macOS screenshot tool.
-
-
-
-
-node 版本 20.19.6

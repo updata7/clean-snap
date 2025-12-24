@@ -1,0 +1,140 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+        include:
+          - os: windows-latest
+            platform: win
+            artifact: exe
+          - os: macos-latest
+            platform: mac
+            artifact: dmg
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.6'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web version
+        run: pnpm run build
+
+      - name: Build Electron app for Windows
+        if: matrix.os == 'windows-latest'
+        run: pnpm run build:electron -- --win --x64
+        env:
+          # 如果需要签名，可以在这里添加证书
+          # CSC_LINK: ${{ secrets.CSC_LINK }}
+          # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # 禁用代码签名（CI 环境通常不需要）
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Build Electron app for macOS
+        if: matrix.os == 'macos-latest'
+        run: pnpm run build:electron -- --mac
+        env:
+          # 如果需要签名，可以在这里添加证书
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # 禁用代码签名（CI 环境通常不需要）
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: List release files
+        shell: bash
+        run: |
+          echo "Release files:"
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            if [ -d "release" ]; then
+              find release -type f -name "*.exe" -o -name "*.zip" || echo "No exe/zip files found"
+            else
+              echo "No release directory found"
+            fi
+          else
+            ls -la release/ || echo "No release directory found"
+          fi
+
+      - name: Upload Windows artifacts
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe-${{ github.sha }}
+          path: release/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload macOS artifacts
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg-${{ github.sha }}
+          path: release/
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write  # 需要此权限来创建 Release 和标签
+      actions: read     # 读取 Actions 信息
+    
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-exe-${{ github.sha }}
+          path: release/windows
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-dmg-${{ github.sha }}
+          path: release/macos
+
+      - name: Read version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release/windows/*
+            release/macos/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          tag_name: v${{ steps.version.outputs.version }}-${{ github.run_number }}
+          name: Release v${{ steps.version.outputs.version }}-${{ github.run_number }}
+        # GITHUB_TOKEN 由 GitHub Actions 自动提供，无需显式声明
+        # softprops/action-gh-release 会自动使用 GITHUB_TOKEN
