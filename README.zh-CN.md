@@ -1,8 +1,6 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 # CleanSnap - 跨平台屏幕录制工具
+
+> 中文 | [English](README.md)
 
 一个功能强大、界面美观的屏幕录制和标注工具，灵感来源于 CleanShot X，全面支持 Windows、macOS 和 Linux。
 
