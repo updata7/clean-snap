@@ -51,13 +51,6 @@
     "directories": {
       "output": "release"
     },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "your-username",
-        "repo": "cleansnap-web"
-      }
-    ],
     "files": [
       "dist/**/*",
       "electron/**/*",
@@ -66,17 +59,10 @@
     "win": {
       "target": [
         {
-          "target": "portable",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        },
-        {
           "target": "nsis",
           "arch": [
-            "x64",
-            "ia32"
+            "ia32",
+            "x64"
           ]
         }
       ],

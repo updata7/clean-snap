@@ -69,6 +69,7 @@ jobs:
       - name: Build Electron app for Windows
         if: matrix.os == 'windows-latest'
         run: pnpm run build:electron -- --win --x64 --publish never
+        timeout-minutes: 45  # Windows 构建 NSIS 可能需要较长时间
         env:
           # 禁用代码签名（CI 环境通常不需要）
           CSC_IDENTITY_AUTO_DISCOVERY: false
