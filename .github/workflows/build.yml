@@ -30,13 +30,23 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: latest-8  # 使用最新的 pnpm 8.x 版本，支持 lockfileVersion 9.0
+          version: 9.12.0  # 使用明确的 pnpm 9.x 版本，完全支持 lockfileVersion 9.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.19.6'
           cache: 'pnpm'
+
+      - name: Check lockfile
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "✓ pnpm-lock.yaml exists"
+            head -3 pnpm-lock.yaml
+          else
+            echo "✗ pnpm-lock.yaml not found"
+            exit 1
+          fi
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
