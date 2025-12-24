@@ -30,7 +30,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: latest-8  # 使用最新的 pnpm 8.x 版本，支持 lockfileVersion 9.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
