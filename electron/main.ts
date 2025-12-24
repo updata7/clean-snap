@@ -60,7 +60,7 @@ if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
 
 // Set FFmpeg path
 if (ffmpegPath && fs.existsSync(ffmpegPath)) {
-  ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfmpegPath(ffmpegPath);
   console.log('[MAIN] FFmpeg path set to:', ffmpegPath);
 } else {
   console.error('[MAIN] FFmpeg executable not found!');
@@ -426,6 +426,7 @@ ipcMain.handle('stop-recording-stream', async (event, format) => {
                 '-c', 'copy',  // 直接复制流，不重新编码
                 '-movflags', '+faststart',
                 '-async', '1',  // 音视频同步：修复长时间录制时的不同步问题
+                '-vsync', 'cfr'  // 强制恒定帧率，确保音视频同步
               ]);
           } else {
             // 重新编码（优化参数 - 优先速度）
@@ -485,9 +486,15 @@ ipcMain.handle('stop-recording-stream', async (event, format) => {
             }
             
             outputOptions.push('-movflags', '+faststart');  // 优化流式播放
-            // 音视频同步：使用 -async 1 来修复长时间录制时的音视频不同步问题
-            // -async 1 表示音频同步到视频，自动调整音频速度以匹配视频时间戳
-            outputOptions.push('-async', '1');
+            // 音视频同步：使用多个参数确保音视频完全同步
+            // -async 1: 音频同步到视频，自动调整音频速度以匹配视频时间戳
+            // -vsync cfr: 强制恒定帧率，确保视频帧时间戳准确
+            // -r: 设置输出帧率，与录制帧率一致
+            outputOptions.push(
+              '-async', '1',
+              '-vsync', 'cfr',
+              '-r', '30'  // 确保输出帧率恒定
+            );
             
             command.outputOptions(outputOptions);
           }

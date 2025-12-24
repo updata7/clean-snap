@@ -747,9 +747,10 @@ export const useVideoRecorder = ({ initialCameraConfig, onClose, getTranslation,
             };
 
             console.log('[Hook] Starting MediaRecorder...');
-            // 使用更小的 timeslice (250ms) 来确保更精确的时间戳同步，避免长时间录制时音视频不同步
-            // 较小的 timeslice 可以减少时间戳累积误差，提高音视频同步精度
-            mediaRecorder.start(250); // 250ms chunks for better A/V sync
+            // 使用 1000ms timeslice 以确保稳定的音视频同步
+            // 过小的 timeslice (如 250ms) 可能导致频繁的数据处理，增加同步误差
+            // 1000ms 是 MediaRecorder 音视频同步的推荐值
+            mediaRecorder.start(1000); // 1s chunks for stable A/V sync
             console.log('[Hook] MediaRecorder started, setting isRecording to true');
             setIsRecording(true);
             setIsPaused(false);
