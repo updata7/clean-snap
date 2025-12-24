@@ -51,6 +51,7 @@
     "directories": {
       "output": "release"
     },
+    "publish": null,
     "files": [
       "dist/**/*",
       "electron/**/*",

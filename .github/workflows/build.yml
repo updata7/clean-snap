@@ -69,24 +69,16 @@ jobs:
       - name: Build Electron app for Windows
         if: matrix.os == 'windows-latest'
         run: pnpm run build:electron -- --win --x64
-        timeout-minutes: 45  # Windows 构建 NSIS 可能需要较长时间
+        timeout-minutes: 45
         env:
-          # 禁用代码签名（CI 环境通常不需要）
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          # 完全禁用发布功能
-          EP_DRAFT: false
-          EP_PRE_RELEASE: false
 
       - name: Build Electron app for macOS
         if: matrix.os == 'macos-latest'
         run: pnpm run build:electron -- --mac
         timeout-minutes: 45
         env:
-          # 禁用代码签名（CI 环境通常不需要）
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          # 完全禁用发布功能
-          EP_DRAFT: false
-          EP_PRE_RELEASE: false
 
       - name: List release files
         shell: bash
